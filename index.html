@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sókratészi Gyakorló</title>
+    
+    <!-- MathJax a LaTeX formulákhoz -->
+    <script>
+        window.MathJax = {
+          tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --error: #ef4444;
+            --success: #10b981;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+        .header-formula {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .level-badge {
+            display: inline-block;
+            background: #e5e7eb;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #4b5563;
+        }
+        .task-text {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .hint {
+            display: none; /* Alapból rejtett */
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #fbbf24;
+            background: #fef3c7;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            background: var(--primary);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        .feedback {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 15px;
+            min-height: 24px;
+        }
+        .correct { color: var(--success); }
+        .incorrect { color: var(--error); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Állandó mankó a fejlécben -->
+    <div class="header-formula">
+        $S = (n-2) \cdot 180^\circ$
+    </div>
+
+    <div class="card" id="taskCard" style="display: none;">
+        <div class="level-badge" id="levelBadge">1. szint</div>
+        <div class="task-text" id="taskText">Feladat betöltése...</div>
+        
+        <div class="hint" id="hint1">
+            <strong>1. Súgó (Gondolkodj el):</strong> <span id="hint1Text"></span>
+        </div>
+        <div class="hint" id="hint2" style="border-left-color: var(--primary); background: #e0f2fe;">
+            <strong>2. Súgó (Lépés):</strong> <span id="hint2Text"></span>
+        </div>
+
+        <input type="text" id="answerInput" placeholder="Ide írd a választ..." autocomplete="off">
+        <button onclick="checkAnswer()">Ellenőrzés</button>
+        
+        <div class="feedback" id="feedback"></div>
+    </div>
+</div>
+
+<script>
+    // IDE MÁSOLD BE A GOOGLE TÁBLÁZAT CSV LINKJÉT!
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSsTBzBKJqfadsSzETDxjKSduFA25Sz9jgnr5cQ1Hw80kZ3dfr2rruEZ3QqQmJtJ05PHQP-soW5IutS/pub?gid=1829492667&single=true&output=csv'; 
+
+    let tasks = [];
+    let currentIndex = 0;
+    let mistakes = 0;
+
+    // Egyszerű CSV feldolgozó
+    function parseCSV(text) {
+        const rows = text.split('\n');
+        const data = [];
+        // Első sor a fejléc, átugorjuk
+        for (let i = 1; i < rows.length; i++) {
+            if (rows[i].trim() === '') continue;
+            // Ha a feladat szövegében van vessző, azt a Sheets idézőjelek közé teszi. 
+            // Ez egy robusztus regex a Google Sheets CSV-hez:
+            const row = rows[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || rows[i].split(',');
+            
+            data.push({
+                szint: row[0].replace(/"/g, '').trim(),
+                feladat: row[1].replace(/"/g, '').trim(),
+                sugo1: row[2].replace(/"/g, '').trim(),
+                sugo2: row[3].replace(/"/g, '').trim(),
+                valasz: row[4].replace(/"/g, '').trim()
+            });
+        }
+        return data;
+    }
+
+    // Adatok lekérése és indítás
+    async function init() {
+        try {
+            const response = await fetch(CSV_URL);
+            const csvText = await response.text();
+            tasks = parseCSV(csvText);
+            document.getElementById('taskCard').style.display = 'block';
+            renderTask();
+        } catch (error) {
+            document.getElementById('taskText').innerText = "Hiba a feladatok betöltésekor. Ellenőrizd a linket!";
+        }
+    }
+
+    // Aktuális feladat megjelenítése
+    function renderTask() {
+        if (currentIndex >= tasks.length) {
+            document.getElementById('taskCard').innerHTML = "<h2>Gyakorlás befejezve! Szép munka!</h2>";
+            return;
+        }
+
+        const task = tasks[currentIndex];
+        mistakes = 0;
+
+        document.getElementById('levelBadge').innerText = task.szint + ". szint";
+        document.getElementById('taskText').innerText = task.feladat;
+        document.getElementById('hint1Text').innerText = task.sugo1;
+        document.getElementById('hint2Text').innerText = task.sugo2;
+        
+        document.getElementById('hint1').style.display = 'none';
+        document.getElementById('hint2').style.display = 'none';
+        document.getElementById('answerInput').value = '';
+        document.getElementById('feedback').innerText = '';
+        document.getElementById('feedback').className = 'feedback';
+
+        // MathJax újra-renderelés hívása az új tartalmakra
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
+    }
+
+    // Állapotfüggvény (Meta Mátrix logikája)
+    function checkAnswer() {
+        const userAnswer = document.getElementById('answerInput').value.trim();
+        const currentTask = tasks[currentIndex];
+        const feedback = document.getElementById('feedback');
+
+        if (userAnswer === currentTask.valasz) {
+            // Helyes válasz
+            feedback.innerText = "Helyes!";
+            feedback.className = "feedback correct";
+            
+            // Rövid késleltetés, majd lapozás
+            setTimeout(() => {
+                currentIndex++;
+                renderTask();
+            }, 1000);
+        } else {
+            // Helytelen válasz
+            mistakes++;
+            feedback.innerText = "Nem jó, próbáld újra!";
+            feedback.className = "feedback incorrect";
+
+            if (mistakes === 1) {
+                document.getElementById('hint1').style.display = 'block'; // 1. Súgó kinyit
+            } else if (mistakes >= 2) {
+                document.getElementById('hint2').style.display = 'block'; // 2. Súgó kinyit
+            }
+        }
+    }
+
+    // Automatikus indítás
+    if (CSV_URL !== 'IDE_JON_A_TE_CSV_LINKED') {
+        init();
+    } else {
+        document.getElementById('taskCard').style.display = 'block';
+        document.getElementById('taskText').innerText = "Kérlek, cseréld ki a CSV_URL változót a kód 90. sorában a Google Táblázatod linkjére!";
+    }
+</script>
+
+</body>
+</html>
