@@ -1,3 +1,6 @@
+---
+layout: null
+---
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -71,6 +74,7 @@
             margin-top: 0;
             color: #4caf50;
             font-size: 1.5rem;
+            text-transform: capitalize;
         }
 
         .card p {
@@ -94,26 +98,21 @@
     <div class="container">
         <h1>Online-Math-Apps Kirakat</h1>
         <div class="grid">
-            <!-- Sorozatok Demonstráció -->
-            <a href="sorozatok_osszeg_demo.html" class="card">
-                <div>
-                    <h2>Sorozatok Összegképlete</h2>
-                    <p>Szókratészi demonstráció a számtani sorozatok összegképletének megértéséhez (2.1-es szint). Lépésről lépésre haladó, beszédalapú magyarázattal.</p>
-                </div>
-                <span class="tag">Demonstráció (Mód B)</span>
-            </a>
             
-            <!-- Ide jöhetnek majd a jövőbeli HTML fájlok linkjei -->
+            <!-- Automatikus GitHub listázó algoritmus az 'apps' mappához -->
+            {% for file in site.static_files %}
+                {% if file.extname == '.html' and file.path contains '/apps/' %}
+                <a href="{{ site.baseurl }}{{ file.path }}" class="card" target="_blank">
+                    <div>
+                        <!-- Fájlnév formázása (alulvonások eltávolítása) -->
+                        <h2>{{ file.name | remove: ".html" | replace: "_", " " | replace: "-", " " }}</h2>
+                        <p>Kattints az interaktív feladat megnyitásához.</p>
+                    </div>
+                    <span class="tag">Megnyitás</span>
+                </a>
+                {% endif %}
+            {% endfor %}
             
-            <!--
-            <a href="masik_app.html" class="card">
-                <div>
-                    <h2>Minta App</h2>
-                    <p>Egy újabb interaktív matematikai alkalmazás leírása.</p>
-                </div>
-                <span class="tag">Gyakorló (Mód A)</span>
-            </a>
-            -->
         </div>
     </div>
 </body>
