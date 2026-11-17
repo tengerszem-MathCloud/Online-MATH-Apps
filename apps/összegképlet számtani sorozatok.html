@@ -6,16 +6,17 @@
     <title>Számtani sorozat összegképlete - Demonstráció</title>
     
     <!-- Hibrid MathJax Konfiguráció -->
-    <script>
-      window.MathJax = {
-        tex: {
-          inlineMath: [['$', '$'], ['\\(', '\\)']],
-          displayMath: [['$$', '$$'], ['\\[', '\\]']],
-          processEscapes: true
-        },
+   <script>
+    window.MathJax = {
+        tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
         svg: { fontCache: 'global' }
-      };
-    </script>
+    };
+    const mathjaxScript = document.createElement('script');
+    mathjaxScript.src = window.location.hostname.includes("github.io") 
+        ? "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" 
+        : "../mathjax/tex-mml-chtml.js"; // Feltételezve, hogy a pb_public gyökerében lesz offline
+    document.head.appendChild(mathjaxScript);
+</script>
     <script id="MathJax-script" async src="/mathjax/tex-svg.js" onerror="this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js';"></script>
 
     <style>
