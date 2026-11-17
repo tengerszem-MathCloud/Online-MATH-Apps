@@ -3,33 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Számtani sorozat összegképlete</title>
+    <title>Számtani sorozat: A differencia (d) meghatározása</title>
 
     <!-- Tailwind CSS betöltése -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Dinamikus MathJax betöltő (Online CDN vagy Offline mikro-szerver) -->
+    <!-- Tiszta Online MathJax Betöltő -->
     <script>
         window.MathJax = {
             tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
             svg: { fontCache: 'global' }
         };
-        
-        const isOnline = window.location.hostname.includes("github.io");
-        
-        // Mivel a fájl az 'apps' mappában van, offline esetben egy könyvtárral feljebb (../) keressük a mathjax mappát
-        const mathjaxUrl = isOnline 
-            ? "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" 
-            : "../mathjax/tex-mml-chtml.js";
-            
-        const script = document.createElement('script');
-        script.src = mathjaxUrl;
-        script.async = true;
-        document.head.appendChild(script);
     </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
     <style>
-        /* Világoskék négyzethálós "füzetlap" háttér sötét módban */
         body {
             background-color: #111827; 
             background-image: 
@@ -38,45 +26,150 @@
             background-size: 40px 40px;
             color: #e5e7eb;
             font-family: system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        .laser-active {
+            cursor: none;
+            user-select: none;
+            touch-action: none;
+        }
+        
+        #laser-pointer {
+            display: none;
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            background-color: #ff5252;
+            border-radius: 50%;
+            box-shadow: 0 0 15px 5px rgba(255, 82, 82, 0.6);
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+        }
+
+        .math-step {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease-out;
+            display: none; /* JS fogja block-ra állítani, mielőtt az opacity-t felhúzza */
+        }
+
+        .math-step.visible {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
+    
+    <!-- Lézermutató pont -->
+    <div id="laser-pointer"></div>
 
-    <!-- Dinamikusan renderelt cím ($S_n$) -->
-    <h1 class="text-3xl md:text-4xl font-bold text-[#add8e6] mb-8 text-center drop-shadow-md">
-        Szint 2.1: Számtani sorozat összegképlete ($S_n$)
-    </h1>
+    <!-- DIA 1: A Probléma -->
+    <div id="slide-1" class="w-full max-w-4xl flex flex-col items-center justify-center min-h-[70vh] transition-opacity duration-500">
+        <h1 class="text-3xl md:text-5xl font-bold text-[#add8e6] mb-12 text-center drop-shadow-md">
+            Mennyivel lépkedünk? ($d$)
+        </h1>
+        <div class="bg-gray-800 border border-gray-700 rounded-3xl p-10 shadow-2xl text-center w-full">
+            <p class="text-2xl md:text-3xl font-light text-gray-200 leading-relaxed">
+                Egy számtani sorozat <strong class="text-white font-bold text-4xl">3. tagja 12</strong>,<br>
+                a <strong class="text-white font-bold text-4xl mt-4 inline-block">7. tagja pedig 32</strong>.
+            </p>
+            <div class="mt-12 p-6 bg-blue-900/30 border border-blue-500/30 rounded-xl inline-block">
+                <p class="text-xl text-blue-200 italic">Határozd meg a sorozat differenciáját!</p>
+            </div>
+        </div>
+        <button onclick="nextSlide()" class="mt-12 bg-[#add8e6] hover:bg-blue-300 text-gray-900 px-10 py-4 rounded-full font-bold text-xl transition-all shadow-[0_0_20px_rgba(173,216,230,0.3)]">
+            Kezdjük a levezetést! ➔
+        </button>
+    </div>
 
-    <!-- Interaktív kártya tartalom -->
-    <div class="bg-gray-800 border border-gray-700 rounded-2xl p-8 max-w-3xl w-full shadow-2xl text-center">
+    <!-- DIA 2: A Levezetés (Alapértelmezetten rejtett) -->
+    <div id="slide-2" class="w-full max-w-6xl hidden opacity-0 transition-opacity duration-500 flex-col items-center pb-24 pt-8">
         
-        <p class="text-2xl md:text-3xl font-light text-gray-200 mb-10">
-            Egy színház nézőterén <strong class="text-white font-bold">15 sor</strong> található.
-        </p>
+        <!-- Emlékeztető fejléc -->
+        <div class="bg-gray-800 border-l-4 border-[#add8e6] p-4 rounded-r-lg shadow-md mb-8 w-full max-w-3xl text-center">
+            <p class="text-gray-300 text-lg">$a_3 = 12$ és $a_7 = 32$. Keresett: $d = ?$</p>
+        </div>
 
-        <!-- Javított gombok tárolója (flex-wrap engedi a sortörést mobilon) -->
-        <div class="flex flex-wrap justify-center items-center gap-4">
+        <!-- 3 oszlopos grid asztalon, 1 oszlopos mobilon -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full relative">
             
-            <button class="bg-[#2196f3] hover:bg-[#1976d2] text-white px-6 py-3 rounded-full transition-all flex items-center shadow-lg font-medium text-sm sm:text-base">
-                <span class="w-3 h-3 bg-[#ff5252] rounded-full mr-3 shadow-[0_0_8px_#ff5252]"></span>
+            <!-- 1. Oszlop: Algebra -->
+            <div class="flex flex-col gap-4">
+                <h3 class="text-xl text-center text-gray-400 font-semibold mb-4 border-b border-gray-700 pb-2">1. Algebra</h3>
+                
+                <div class="math-step bg-gray-800/80 border border-gray-700 p-5 rounded-xl shadow-sm" data-speech="Írjuk fel a hetedik tagot a harmadik tag segítségével! A hetedik tag egyenlő a harmadik tag meg négyszer a differencia.">
+                    <p class="text-xl text-center">$a_7 = a_3 + 4d$</p>
+                </div>
+                
+                <div class="math-step bg-gray-800/80 border border-gray-700 p-5 rounded-xl shadow-sm" data-speech="Helyettesítsük be az ismert adatokat! Harminckettő egyenlő tizenkettő meg négy dé.">
+                    <p class="text-xl text-center">$32 = 12 + 4d$</p>
+                </div>
+            </div>
+
+            <!-- 2. Oszlop: Módszer -->
+            <div class="flex flex-col gap-4">
+                <h3 class="text-xl text-center text-[#ffcc00] font-semibold mb-4 border-b border-[#ffcc00]/30 pb-2">2. Módszer</h3>
+                
+                <div class="math-step bg-[#ffcc00]/10 border border-[#ffcc00]/40 p-4 rounded-xl shadow-sm" data-speech="Figyelj! Hány lépés van a 3. és a 7. tag között? Bizony, 7 mínusz 3, azaz 4 lépés.">
+                    <div class="text-yellow-200 text-center">
+                        <strong class="block mb-1">Típushiba elkerülése:</strong>
+                        A lépésköz nem 7 és nem 3, hanem az indexek különbsége!
+                    </div>
+                </div>
+
+                <div class="math-step bg-gray-800/80 border border-gray-700 p-5 rounded-xl shadow-sm" data-speech="Rendezzük az egyenletet! Vonjunk ki mindkét oldalból tizenkettőt.">
+                    <p class="text-center text-gray-300">$-12$ mindkét oldalból</p>
+                </div>
+            </div>
+
+            <!-- 3. Oszlop: Eredmény -->
+            <div class="flex flex-col gap-4">
+                <h3 class="text-xl text-center text-[#4caf50] font-semibold mb-4 border-b border-[#4caf50]/30 pb-2">3. Eredmény</h3>
+                
+                <div class="math-step border-l-4 border-orange-500 bg-gray-800 p-5 rounded-r-xl shadow-sm mt-auto" data-speech="Így azt kapjuk, hogy húsz egyenlő négy dé.">
+                    <p class="text-xl text-center">$20 = 4d$</p>
+                </div>
+
+                <div class="math-step border-4 border-green-500 bg-green-900/20 p-5 rounded-xl shadow-lg mt-4" data-speech="Osztunk néggyel, így megkapjuk a végeredményt: a differencia öt.">
+                    <p class="text-2xl text-center font-bold text-green-400">$d = 5$</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fix Alsó vezérlősáv -->
+        <div class="fixed bottom-0 left-0 w-full bg-gray-900/90 backdrop-blur-sm border-t border-gray-700 p-4 flex flex-wrap justify-center items-center gap-4 z-50">
+            <button onclick="toggleLaser()" id="laser-btn" class="bg-[#2196f3] hover:bg-[#1976d2] text-white px-5 py-2.5 rounded-full transition-colors flex items-center shadow-lg text-sm">
+                <span class="w-3 h-3 bg-[#ff5252] rounded-full mr-2 shadow-[0_0_8px_#ff5252]"></span>
                 Lézermutató
             </button>
-
-            <button class="bg-[#2196f3] hover:bg-[#1976d2] text-white px-6 py-3 rounded-full transition-all flex items-center shadow-lg font-medium text-sm sm:text-base">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z"></path>
-                </svg>
-                Hangos magyarázat
+            <button onclick="toggleVoice()" id="voice-btn" class="bg-gray-700 hover:bg-gray-600 text-white px-5 py-2.5 rounded-full transition-colors flex items-center shadow-lg text-sm border border-gray-600">
+                Hang: Ki
             </button>
-
-            <button class="bg-[#2196f3] hover:bg-[#1976d2] text-white px-6 py-3 rounded-full transition-all flex items-center shadow-lg font-medium text-sm sm:text-base">
-                Tovább a levezetéshez
-                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                </svg>
+            <button onclick="showNextStep()" id="next-step-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-full transition-colors flex items-center shadow-lg text-sm font-bold">
+                Következő Lépés ➔
             </button>
         </div>
     </div>
-</body>
-</html>
+
+    <!-- Vezérlő JavaScript -->
+    <script>
+        let currentStep = 0;
+        let steps = [];
+        let voiceEnabled = false;
+        let laserEnabled = false;
+
+        // Lézermutató logika
+        const laser = document.getElementById('laser-pointer');
+        
+        document.addEventListener('mousemove', (e) => {
+            if (laserEnabled) {
+                laser.style.left = e.clientX + 'px';
+                laser.style.top = e.clientY + 'px';
+            }
+        });
+        
+        document.addEventListener('
