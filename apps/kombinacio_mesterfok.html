@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kombináció &amp; Hipergeometrikus Mesterfok – Mód D</title>
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    :root {
+      --primary: #1e40af;
+      --primary-light: #3b82f6;
+      --accent: #f59e0b;
+      --success: #15803d;
+      --success-bg: #dcfce7;
+      --danger: #b91c1c;
+      --danger-bg: #fee2e2;
+      --text: #1e293b;
+      --muted: #64748b;
+      --card-bg: rgba(255, 255, 255, 0.96);
+      --grid-alpha: 0.7;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100dvh;
+      overflow: hidden;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background-color: #f0f8ff;
+      background-image:
+        linear-gradient(rgba(147, 197, 253, var(--grid-alpha)) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(147, 197, 253, var(--grid-alpha)) 1px, transparent 1px);
+      background-size: 3vmin 3vmin;
+      display: flex;
+      flex-direction: column;
+      transition: background-image 0.4s ease;
+    }
+
+    /* TOP BAR */
+    header {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5vmin;
+      padding: 1vh 2vw;
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom: 2px solid #cbd5e1;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.8vmin;
+      cursor: pointer;
+      user-select: none;
+      padding: 0.4vh 0.8vw;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .brand:hover { background: #eff6ff; }
+    .brand-icon { font-size: clamp(1.1rem, 2.5vmin, 1.6rem); }
+    .brand-title {
+      font-weight: 800;
+      font-size: clamp(0.85rem, 2vmin, 1.2rem);
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    .progress-wrap {
+      flex: 1 1 auto;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4vh;
+    }
+
+    .level-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: clamp(0.75rem, 1.6vmin, 0.95rem);
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .level-badge {
+      background: var(--primary);
+      color: #fff;
+      padding: 0.2vh 0.8vw;
+      border-radius: 999px;
+      font-size: clamp(0.7rem, 1.5vmin, 0.9rem);
+    }
+    .level-badge.master { background: #7c3aed; }
+
+    .progress-track {
+      width: 100%;
+      height: 1.1vh;
+      min-height: 8px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+      display: flex;
+      gap: 3px;
+    }
+
+    .progress-seg {
+      flex: 1;
+      background: #cbd5e1;
+      border-radius: 999px;
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-seg-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+      transition: width 0.35s ease;
+    }
+    .progress-seg.master-seg .progress-seg-fill {
+      background: linear-gradient(90deg, #a855f7, #6d28d9);
+    }
+
+    .stats-row {
+      display: flex;
+      align-items: center;
+      gap: 1.2vw;
+      font-weight: 700;
+      font-size: clamp(0.8rem, 1.8vmin, 1.05rem);
+      white-space: nowrap;
+    }
+    .streak-pill {
+      background: #fef3c7;
+      color: #b45309;
+      padding: 0.4vh 1vw;
+      border-radius: 999px;
+      border: 1px solid #fcd34d;
+    }
+
+    /* MAIN STAGE */
+    main {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5vh 2vw;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .screen {
+      display: none;
+      width: 100%;
+      max-width: 920px;
+      height: 100%;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .screen.active { display: flex; }
+
+    .card {
+      width: 100%;
+      max-height: 100%;
+      background: var(--card-bg);
+      border-radius: 18px;
+      border: 2px solid #bfdbfe;
+      box-shadow: 0 10px 30px rgba(30, 64, 175, 0.12);
+      padding: clamp(12px, 2.2vh, 26px) clamp(14px, 2.8vw, 32px);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(8px, 1.4vh, 16px);
+      overflow-y: auto;
+    }
+
+    h1, h2, h3 { margin: 0; }
+    .screen-title {
+      font-size: clamp(1.15rem, 2.8vmin, 1.7rem);
+      color: var(--primary);
+      text-align: center;
+    }
+    .subtitle {
+      font-size: clamp(0.85rem, 1.8vmin, 1.05rem);
+      color: var(--muted);
+      text-align: center;
+      margin: 0;
+    }
+
+    /* FORMULA FADING BOX */
+    .formula-bar {
+      background: #eff6ff;
+      border: 1.5px dashed #60a5fa;
+      border-radius: 12px;
+      padding: 0.8vh 1.4vw;
+      font-size: clamp(0.8rem, 1.7vmin, 1rem);
+      color: #1e3a8a;
+      text-align: center;
+      transition: opacity 0.4s ease, max-height 0.4s ease;
+    }
+
+    /* TASK DISPLAY */
+    .task-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: clamp(0.75rem, 1.6vmin, 0.95rem);
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .task-type-tag {
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 0.25vh 0.8vw;
+      border-radius: 8px;
+    }
+
+    .task-text {
+      background: #f8fafc;
+      border-left: 5px solid var(--primary-light);
+      border-radius: 10px;
+      padding: clamp(10px, 1.8vh, 18px) clamp(12px, 2vw, 20px);
+      font-size: clamp(0.95rem, 2.3vmin, 1.35rem);
+      line-height: 1.45;
+      font-weight: 500;
+    }
+
+    /* INPUT AREAS */
+    .inputs-grid {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(6px, 1.1vh, 12px);
+    }
+
+    .hyper-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(8px, 1.4vmin, 14px);
+    }
+    .hyper-grid .full-span {
+      grid-column: 1 / -1;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35vh;
+    }
+
+    .input-label {
+      font-size: clamp(0.78rem, 1.6vmin, 0.95rem);
+      font-weight: 700;
+      color: #334155;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+    .label-hint {
+      font-weight: 500;
+      color: var(--muted);
+      font-size: 0.85em;
+    }
+
+    .math-input {
+      width: 100%;
+      padding: clamp(8px, 1.2vh, 12px) 14px;
+      font-size: clamp(1rem, 2.3vmin, 1.35rem);
+      font-weight: 700;
+      border: 2.5px solid #94a3b8;
+      border-radius: 10px;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    .math-input:focus {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.22);
+    }
+    .math-input.input-ok {
+      border-color: var(--success);
+      background: var(--success-bg);
+    }
+    .math-input.input-err {
+      border-color: var(--danger);
+      background: var(--danger-bg);
+    }
+
+    .live-preview {
+      min-height: 1.3em;
+      font-size: clamp(0.75rem, 1.5vmin, 0.9rem);
+      color: var(--primary);
+      font-weight: 600;
+      padding-left: 4px;
+    }
+
+    /* QUICK KEYPAD & ACTIONS */
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .quick-keys {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .qkey {
+      min-width: 42px;
+      height: clamp(34px, 4.8vh, 44px);
+      padding: 0 12px;
+      font-size: clamp(0.95rem, 2vmin, 1.15rem);
+      font-weight: 800;
+      border: 2px solid #cbd5e1;
+      background: #f1f5f9;
+      color: #0f172a;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.15s;
+    }
+    .qkey:hover { background: #e2e8f0; }
+    .qkey:active { transform: scale(0.95); }
+
+    .btn {
+      padding: clamp(8px, 1.3vh, 13px) clamp(16px, 2.6vw, 28px);
+      font-size: clamp(0.9rem, 2vmin, 1.15rem);
+      font-weight: 800;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.12s, background 0.2s, box-shadow 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(30, 64, 175, 0.28);
+    }
+    .btn-primary:hover:not(:disabled) { background: #1d4ed8; }
+
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(21, 128, 61, 0.28);
+    }
+    .btn-success:hover:not(:disabled) { background: #166534; }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+    .btn-secondary:hover:not(:disabled) { background: #cbd5e1; }
+
+    /* GROKKING FEEDBACK BOX ("Piros Doboz" & Zöld siker) */
+    .feedback-box {
+      display: none;
+      border-radius: 12px;
+      padding: clamp(8px, 1.4vh, 14px) clamp(12px, 2vw, 18px);
+      font-size: clamp(0.85rem, 1.8vmin, 1.05rem);
+      line-height: 1.4;
+    }
+    .feedback-box.error {
+      display: block;
+      background: #fff5f5;
+      border: 3px solid #dc2626;
+      color: #991b1b;
+      font-family: 'Comic Sans MS', 'Segoe UI', cursive, sans-serif;
+      transform: rotate(-0.4deg);
+      box-shadow: 4px 4px 14px rgba(220, 38, 38, 0.15);
+    }
+    .feedback-box.success {
+      display: block;
+      background: #f0fdf4;
+      border: 3px solid #16a34a;
+      color: #14532d;
+      font-weight: 600;
+    }
+
+    /* INTRO / SANDBOX SCREEN */
+    .sandbox-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(10px, 1.8vmin, 16px);
+    }
+    .sandbox-item {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: clamp(10px, 1.5vh, 14px);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sandbox-status {
+      font-size: 0.9rem;
+      font-weight: 700;
+      min-height: 1.3em;
+    }
+    .sandbox-status.ok { color: var(--success); }
+    .sandbox-status.wait { color: var(--muted); }
+
+    /* VICTORY SCREEN */
+    .victory-stats {
+      display: flex;
+      justify-content: center;
+      gap: 2vw;
+      flex-wrap: wrap;
+    }
+    .v-stat {
+      background: #eff6ff;
+      border: 2px solid #93c5fd;
+      border-radius: 12px;
+      padding: 1vh 2vw;
+      text-align: center;
+      min-width: 130px;
+    }
+    .v-stat-val {
+      font-size: clamp(1.3rem, 3vmin, 1.9rem);
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .v-stat-lbl {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .warn-banner {
+      background: #fef3c7;
+      border-left: 5px solid #d97706;
+      color: #92400e;
+      padding: 0.9vh 1.2vw;
+      border-radius: 8px;
+      font-size: clamp(0.8rem, 1.6vmin, 0.95rem);
+      font-weight: 600;
+    }
+
+    .code-display {
+      display: none;
+      background: #0f172a;
+      color: #38bdf8;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: clamp(0.95rem, 2.2vmin, 1.35rem);
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 1.4vh 1.5vw;
+      border-radius: 12px;
+      text-align: center;
+      word-break: break-all;
+      border: 2px solid #0284c7;
+    }
+
+    /* TEACHER DECODER MODAL */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.72);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 2vh 2vw;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-card {
+      background: #fff;
+      width: 100%;
+      max-width: 780px;
+      max-height: 90dvh;
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 8px;
+    }
+    .decoder-area {
+      width: 100%;
+      min-height: 100px;
+      font-family: monospace;
+      font-size: 0.95rem;
+      padding: 10px;
+      border: 2px solid #cbd5e1;
+      border-radius: 10px;
+      resize: vertical;
+    }
+    table.decode-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    table.decode-table th, table.decode-table td {
+      border: 1px solid #cbd5e1;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    table.decode-table th {
+      background: #f1f5f9;
+      font-weight: 700;
+    }
+
+    @media (max-width: 680px) {
+      .sandbox-grid, .hyper-grid { grid-template-columns: 1fr; }
+      header { padding: 0.8vh 2vw; gap: 6px; }
+      .brand-title { display: none; }
+      .card { padding: 12px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand" id="teacher-trigger" title="Kombinatorika Mesterfok">
+      <span class="brand-icon">🎲</span>
+      <span class="brand-title">Kombináció Mesterfok</span>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="level-row">
+        <span id="level-label">Előkészület</span>
+        <span class="level-badge" id="level-badge">Szint 1 / 4</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-seg"><div class="progress-seg-fill" id="seg-1"></div></div>
+        <div class="progress-seg"><div class="progress-seg-fill" id="seg-2"></div></div>
+        <div class="progress-seg"><div class="progress-seg-fill" id="seg-3"></div></div>
+        <div class="progress-seg master-seg"><div class="progress-seg-fill" id="seg-4"></div></div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <span class="streak-pill">🔥 <span id="streak-val">0</span></span>
+      <span id="master-counter" style="display:none; color:#6d28d9;">🏆 <span id="master-val">0</span>/3</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1. BEVEZETŐ / BEGÉPELÉS-KIPRÓBÁLÓ KÉPERNYŐ -->
+    <section id="screen-intro" class="screen active">
+      <div class="card">
+        <h1 class="screen-title">Kombináció &amp; Hipergeometrikus Kihívás</h1>
+        <p class="subtitle">
+          4 szinten át juthatsz el a <strong>Mesterfokig</strong> (3 zsinórban jó válasz = szintlépés, 2 hiba = visszalépés).
+          A <strong>4. szinten 3 sikeres feladat</strong> után megkapod az egyszeri Classroom-igazolókódodat!
+        </p>
+
+        <div class="sandbox-grid">
+          <div class="sandbox-item">
+            <div class="input-label">1. Próba: Egész szám (pl. $\binom{6}{2} = 15$)</div>
+            <input type="text" id="sb-int" class="math-input" inputmode="decimal" placeholder="Írd be: 15">
+            <div class="sandbox-status wait" id="sb-int-status">Próbáld ki: írd be a 15-öt!</div>
+          </div>
+          <div class="sandbox-item">
+            <div class="input-label">2. Próba: Valószínűség (tört, tizedes vagy %)</div>
+            <input type="text" id="sb-prob" class="math-input" placeholder="Pl. 1/4 vagy 0,25 vagy 25%">
+            <div class="sandbox-status wait" id="sb-prob-status">Próbáld ki: írj be 1/4-et, 0,25-öt vagy 25%-ot!</div>
+          </div>
+        </div>
+
+        <div class="controls-row">
+          <div class="quick-keys">
+            <button type="button" class="qkey" onclick="insertKey('/')">/</button>
+            <button type="button" class="qkey" onclick="insertKey(',')">,</button>
+            <button type="button" class="qkey" onclick="insertKey('%')">%</button>
+            <button type="button" class="qkey" onclick="backspaceKey()">⌫</button>
+          </div>
+          <button type="button" class="btn btn-primary" id="btn-start" onclick="startGame()">
+            Induljon a kihívás! →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. JÁTÉK KÉPERNYŐ -->
+    <section id="screen-game" class="screen">
+      <div class="card">
+        <div class="task-meta">
+          <span class="task-type-tag" id="task-type-tag">1. Szint: Alap kombináció</span>
+          <span id="free-mode-badge" style="display:none; color:#15803d; font-weight:800;">✨ Szabad gyakorló mód</span>
+        </div>
+
+        <div class="formula-bar" id="formula-bar">
+          $\binom{n}{k} = \frac{n!}{k!\cdot(n-k)!}$
+        </div>
+
+        <div class="task-text" id="task-text">Betöltés...</div>
+
+        <!-- Egyszerű (1 mezős) válasz -->
+        <div id="simple-input-area" class="inputs-grid">
+          <div class="input-group">
+            <label class="input-label" for="inp-simple">
+              <span>Végeredmény:</span>
+              <span class="label-hint">Csak a számértéket add meg (szóköz nem számít)</span>
+            </label>
+            <input type="text" id="inp-simple" class="math-input" inputmode="numeric" autocomplete="off" placeholder="Írd be az egész számot...">
+            <div class="live-preview" id="prev-simple"></div>
+          </div>
+        </div>
+
+        <!-- Hipergeometrikus (3 mezős) válasz -->
+        <div id="hyper-input-area" class="hyper-grid" style="display:none;">
+          <div class="input-group">
+            <label class="input-label" for="inp-num">
+              <span>Számláló (kedvező esetek, $k$):</span>
+            </label>
+            <input type="text" id="inp-num" class="math-input" inputmode="numeric" autocomplete="off" placeholder="Direkt vagy komplementer úton">
+            <div class="live-preview" id="prev-num"></div>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="inp-den">
+              <span>Nevező (összes eset, $\text{ö}$):</span>
+            </label>
+            <input type="text" id="inp-den" class="math-input" inputmode="numeric" autocomplete="off" placeholder="Összes lehetséges húzás">
+            <div class="live-preview" id="prev-den"></div>
+          </div>
+          <div class="input-group full-span">
+            <label class="input-label" for="inp-prob">
+              <span>Valószínűség ($P$):</span>
+              <span class="label-hint">Formátum: tört (pl. 3/8), tizedes (pl. 0,375) vagy % (pl. 37,5%)</span>
+            </label>
+            <input type="text" id="inp-prob" class="math-input" autocomplete="off" placeholder="Pl. 3/8 vagy 0,375 vagy 37,5%">
+            <div class="live-preview" id="prev-prob"></div>
+          </div>
+        </div>
+
+        <div id="feedback-box" class="feedback-box"></div>
+
+        <div class="controls-row">
+          <div class="quick-keys">
+            <button type="button" class="qkey" onclick="insertKey('/')">/</button>
+            <button type="button" class="qkey" onclick="insertKey(',')">,</button>
+            <button type="button" class="qkey" onclick="insertKey('%')">%</button>
+            <button type="button" class="qkey" onclick="backspaceKey()">⌫</button>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn btn-primary" id="btn-check" onclick="checkAnswer()">Ellenőrzés (Enter)</button>
+            <button type="button" class="btn btn-success" id="btn-next" onclick="nextTask()" style="display:none;">Következő feladat →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. GYŐZELMI / CLASSROOM IGAZOLÓKÓD KÉPERNYŐ -->
+    <section id="screen-victory" class="screen">
+      <div class="card">
+        <h1 class="screen-title">🏆 Gratulálok! Teljesítetted a Mesterfokot!</h1>
+        <div class="victory-stats">
+          <div class="v-stat">
+            <div class="v-stat-val" id="v-solved">0</div>
+            <div class="v-stat-lbl">Megoldott feladat</div>
+          </div>
+          <div class="v-stat">
+            <div class="v-stat-val" id="v-accuracy">100%</div>
+            <div class="v-stat-lbl">Pontosság</div>
+          </div>
+        </div>
+
+        <div class="warn-banner">
+          ⚠️ <strong>Fontos:</strong> Az igazolókód csak <strong>EGYSZER</strong> generálható le! Ügyelj rá, hogy a teljes nevedet pontosan, elgépelés nélkül írd be!
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="student-name">Teljes neved (Classroomhoz):</label>
+          <input type="text" id="student-name" class="math-input" placeholder="Pl. Kiss Anna">
+        </div>
+
+        <div class="controls-row">
+          <button type="button" class="btn btn-primary" id="btn-gen-code" onclick="generateClassroomCode()">
+            🔐 Igazolókód generálása
+          </button>
+          <button type="button" class="btn btn-success" id="btn-copy-code" onclick="copyCode()" style="display:none;">
+            📋 Kód másolása
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="enterFreeMode()">
+            Tovább gyakorlok (szabad mód)
+          </button>
+        </div>
+
+        <div class="code-display" id="code-display"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- REJTETT TANÁRI DEKÓDOLÓ MODÁL -->
+  <div class="modal-backdrop" id="decoder-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 style="color:var(--primary);">🔐 Tanári Igazolókód Dekódoló</h2>
+        <button type="button" class="btn btn-secondary" onclick="closeDecoder()">Bezárás ✕</button>
+      </div>
+      <p style="margin:0; font-size:0.9rem; color:var(--muted);">
+        Illessz be egy vagy több diák által beküldött igazolókódot (soronként egyet):
+      </p>
+      <textarea id="decoder-input" class="decoder-area" placeholder="XXXX-XXXX-XXXX-XXXX..."></textarea>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn btn-primary" onclick="runBatchDecode()">Ellenőrzés és visszafejtés</button>
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('decoder-input').value=''; document.getElementById('decoder-results').innerHTML='';">Törlés</button>
+      </div>
+      <div id="decoder-results"></div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================
+    // MATEMATIKAI SEGÉDFÜGGVÉNYEK
+    // =========================================================
+    function comb(n, k) {
+      if (k < 0 || k > n) return 0;
+      if (k === 0 || k === n) return 1;
+      if (k > n - k) k = n - k;
+      let res = 1;
+      for (let i = 1; i <= k; i++) {
+        res = (res * (n - k + i)) / i;
+      }
+      return Math.round(res);
+    }
+
+    function gcd(a, b) {
+      a = Math.abs(Math.round(a));
+      b = Math.abs(Math.round(b));
+      while (b) { let t = b; b = a % b; a = t; }
+      return a || 1;
+    }
+
+    function fmtInt(n) {
+      return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    }
+
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function parseIntInput(str) {
+      const cleaned = str.replace(/\s+/g, '').replace(/\./g, '');
+      if (!/^\d+$/.test(cleaned)) return null;
+      return parseInt(cleaned, 10);
+    }
+
+    function parseProbInput(str) {
+      let s = str.trim().replace(/\s+/g, '').replace(/,/g, '.');
+      if (!s) return null;
+      if (s.endsWith('%')) {
+        const val = parseFloat(s.slice(0, -1));
+        return isNaN(val) ? null : { value: val / 100, type: 'percent', raw: val };
+      }
+      if (s.includes('/')) {
+        const parts = s.split('/');
+        if (parts.length !== 2) return null;
+        const a = parseFloat(parts[0]);
+        const b = parseFloat(parts[1]);
+        if (isNaN(a) || isNaN(b) || b === 0) return null;
+        return { value: a / b, type: 'fraction', a, b };
+      }
+      const val = parseFloat(s);
+      if (isNaN(val)) return null;
+      return { value: val, type: 'decimal' };
+    }
+
+    // =========================================================
+    // TELJES FELADATBANK (A 12 ALAPFELADAT + DINAMIKUS GENERÁTOROK)
+    // =========================================================
+    const CORE_TASKS = {
+      1: [
+        {
+          tag: '1. Szint: Alap kombináció',
+          mode: 'simple',
+          text: 'Egy 10 fős tenisztornán körmérkőzéses rendszerben minden játékos pontosan egyszer játszik mindenkivel. Hány mérkőzést játszanak összesen a tornán?',
+          answer: 45,
+          formula: '$\\binom{n}{k} = \\frac{n!}{k!(n-k)!}$ (sorrend nem számít)',
+          diagnose: (u) => {
+            if (u === 90) return 'Majdnem! A $10 \\cdot 9 = 90$ még figyelembe veszi a sorrendet (A–B és B–A külön). Mivel egy meccs ugyanaz, oszd el $2$-vel!';
+            return 'Válassz ki $10$ főből $2$-t sorrend nélkül: $\\binom{10}{2} = \\frac{10 \\cdot 9}{2}$.';
+          }
+        },
+        {
+          tag: '1. Szint: Alap kombináció',
+          mode: 'simple',
+          text: 'Egy 24 fős osztályból 3 diákot választanak ki az iskolai jótékonysági gyűjtés lebonyolítására (a három diák feladata azonos, nincsenek tisztségek). Hányféleképpen állítható össze a csapat?',
+          answer: 2024,
+          formula: '$\\binom{n}{k} = \\frac{n \\cdot (n-1) \\cdots (n-k+1)}{k!}$',
+          diagnose: (u) => {
+            if (u === 12144) return 'Ez az ismétlés nélküli variáció ($24 \\cdot 23 \\cdot 22$). Mivel nincsenek tisztségek, oszd el $3! = 6$-tal!';
+            return 'Számold ki a $\\binom{24}{3} = \\frac{24 \\cdot 23 \\cdot 22}{3 \\cdot 2 \\cdot 1}$ értéket!';
+          }
+        },
+        {
+          tag: '1. Szint: Kártyahúzás',
+          mode: 'simple',
+          text: 'Egy 32 lapos magyar kártyacsomagból véletlenszerűen kihúzunk egyszerre 4 lapot. Hányféle különböző húzás lehetséges, ha a lapok sorrendje nem számít?',
+          answer: 35960,
+          formula: '$\\binom{n}{k} = \\frac{n \\cdot (n-1) \\cdots (n-k+1)}{k!}$',
+          diagnose: (u) => {
+            if (u === 863040) return 'Elfelejtetted elosztani a 4 lap saját sorrendjeinek számával ($4! = 24$)!';
+            return 'Használd a $\\binom{32}{4}$ kombinációt! Egyszerűsíts a $4! = 24$-gyel.';
+          }
+        },
+        {
+          tag: '1. Szint: Geometriai kombinatorika',
+          mode: 'simple',
+          text: 'Egy konvex tízszög csúcsai közül hányféleképpen választhatunk ki hármat úgy, hogy ezek egy háromszöget határozzanak meg?',
+          answer: 120,
+          formula: 'Háromszögek száma $n$-szögben: $\\binom{n}{3}$',
+          diagnose: (u) => {
+            if (u === 720) return 'A $10 \\cdot 9 \\cdot 8 = 720$ a sorrendet is számolja, de egy háromszög csúcsainak sorrendje mindegy! Oszd el $3! = 6$-tal.';
+            return 'Egy háromszöghöz $10$ csúcsból $3$-at kell választani sorrend nélkül: $\\binom{10}{3}$.';
+          }
+        },
+        {
+          tag: '1. Szint: Geometriai kombinatorika',
+          mode: 'simple',
+          text: 'Hány átlója van egy konvex tízszögnek?',
+          answer: 35,
+          formula: 'Átlók száma: $\\binom{n}{2} - n$',
+          diagnose: (u) => {
+            if (u === 45) return 'A $\\binom{10}{2} = 45$ az ÖSSZES szakasz száma (oldalak + átlók). Ne felejtsd el levonni a $10$ oldalt!';
+            return 'Válassz ki 2 csúcsot ($\\binom{10}{2}$), majd vond ki belőle a sokszög $10$ oldalát!';
+          }
+        }
+      ],
+      2: [
+        {
+          tag: '2. Szint: Halmazbontás (Tételhúzás)',
+          mode: 'simple',
+          text: 'Egy szóbeli vizsgán 16 tételből kell egyszerre 3-at húzni. Egy diák 7 tételt tanult meg hibátlanul. Hányféleképpen húzhat úgy 3 tételt, hogy azok között pontosan 2 olyan legyen, amelyet hibátlanul tud?',
+          answer: 189,
+          formula: 'Két csoportból választás: $\\binom{K}{k} \\cdot \\binom{N-K}{n-k}$',
+          diagnose: (u) => {
+            if (u === 21) return 'Csak a 2 tudott tétel kiválasztását ($\\binom{7}{2} = 21$) számoltad ki! A maradék $16 - 7 = 9$ nem tudott tételből is ki kell húzni $1$-et!';
+            if (u === 30) return 'A két független választás számát nem összeadni, hanem SZOROZNI kell: $21 \\cdot 9$.';
+            return 'Bontsd ketté a 16 tételt: 7 tudott (ebből 2-t húz) és 9 nem tudott (ebből 1-et húz). Szorozd össze: $\\binom{7}{2} \\cdot \\binom{9}{1}$.';
+          }
+        },
+        {
+          tag: '2. Szint: Halmazbontás (Csapat)',
+          mode: 'simple',
+          text: 'Egy 14 fős tánccsoportban 8 lány és 6 fiú táncol. A városi gálára 5 fős fellépő csapatot választanak ki úgy, hogy pontosan 3 lány és 2 fiú kerüljön bele. Hányféleképpen állítható össze a csapat?',
+          answer: 840,
+          formula: 'Független választások szorzata: $\\binom{A}{a} \\cdot \\binom{B}{b}$',
+          diagnose: (u) => {
+            if (u === 71) return 'A két részhalmazból történő választások számát ($56$ és $15$) összeadtad szorzás helyett!';
+            if (u === 56 || u === 15) return 'Csak az egyik csoport kiválasztását számoltad ki. Szorozd össze a lányok ($\\binom{8}{3}$) és a fiúk ($\\binom{6}{2}$) lehetőségeit!';
+            return 'Számold ki külön a lányokat ($\\binom{8}{3}$) és a fiúkat ($\\binom{6}{2}$), majd szorozd össze őket!';
+          }
+        },
+        {
+          tag: '2. Szint: Urnamodell',
+          mode: 'simple',
+          text: 'Egy dobozban 9 zöld és 6 piros golyó van. Visszatevés nélkül, véletlenszerűen kihúzunk 4 golyót. Hányféleképpen húzhatunk ki pontosan 2 zöld és 2 piros golyót?',
+          answer: 540,
+          formula: 'Urnamodell kedvező esetei: $\\binom{Z}{z} \\cdot \\binom{P}{p}$',
+          diagnose: (u) => {
+            if (u === 51) return 'Összeadtad a két kombinációt ($36 + 15$) szorzás helyett! Minden zöld párhoz bármelyik piros pár társulhat.';
+            return '9 zöldből 2-t ($\\binom{9}{2}$) ÉS 6 pirosból 2-t ($\\binom{6}{2}$) választunk, a kettőt össze kell szorozni.';
+          }
+        }
+      ],
+      3: [
+        {
+          tag: '3. Szint: Esetszétválasztás ("legalább")',
+          mode: 'simple',
+          text: 'Egy 16 fős informatikaszakkörön 10 fiú és 6 lány vesz részt. Egy országos versenyre 4 fős csapatot küldenek. Hányféleképpen választható ki a csapat, ha abban legalább 3 fiúnak kell lennie?',
+          answer: 930,
+          formula: '"Legalább" = diszjunkt esetek összege (eseteken belül szorzás)',
+          diagnose: (u) => {
+            if (u === 720) return 'Csak a pontosan 3 fiús esetet ($\\binom{10}{3} \\cdot \\binom{6}{1} = 720$) számoltad ki! A "legalább 3" azt is jelenti, hogy 4 fiú és 0 lány is lehet!';
+            if (u === 210) return 'Ez csak a 4 fiús eset. Add hozzá a 3 fiú + 1 lány esetet is!';
+            return 'Két eset van: (3 fiú, 1 lány) VAGY (4 fiú, 0 lány). Számold ki külön-külön, majd add össze: $\\binom{10}{3}\\binom{6}{1} + \\binom{10}{4}\\binom{6}{0}$.';
+          }
+        },
+        {
+          tag: '3. Szint: Esetszétválasztás ("legalább")',
+          mode: 'simple',
+          text: 'Egy 12 fős iskolai zenekarban 7 fúvós és 5 vonós hangszeres játszik. Egy ünnepségre 3 fős kamaracsoportot alakítanak. Hányféleképpen állhat fel a csoport, ha legalább 2 vonós játékosnak szerepelnie kell benne?',
+          answer: 80,
+          formula: 'Diszjunkt esetek összege: Eset 1 $+$ Eset 2',
+          diagnose: (u) => {
+            if (u === 70) return 'Csak a pontosan 2 vonós esetet számoltad ki ($70$)! Ne felejtsd ki azt az esetet, amikor mind a 3 játékos vonós ($\\binom{5}{3}$)!';
+            if (u === 10) return 'Ez csak a 3 vonós eset. Add hozzá a 2 vonós + 1 fúvós esetet is!';
+            return 'Válaszd szét két esetre: 2 vonós + 1 fúvós, illetve 3 vonós + 0 fúvós, majd add össze őket!';
+          }
+        },
+        {
+          tag: '3. Szint: Komplementer gondolkodás',
+          mode: 'simple',
+          text: 'Egy 12 fős baráti társaságban 7 lány és 5 fiú van. Egy 3 fős szervezőcsapatot választanak. Hányféleképpen tehetik ezt meg, ha legalább 1 lánynak lennie kell a csapatban?',
+          answer: 210,
+          formula: 'Legkönnyebb út (komplementer): Összes eset $-$ "egyik sem lány"',
+          diagnose: (u) => {
+            if (u === 10) return 'A $\\binom{5}{3} = 10$ a komplementer (csak fiúk) eset! Vond ki ezt az összes esetből ($\\binom{12}{3}$)!';
+            if (u === 220) return 'A $220$ az összes lehetséges csapat, beleértve a csak fiúkból állókat is. Vond ki belőle a csak fiúkból állókat ($\\binom{5}{3}$)!';
+            return 'Számold ki az összes 3 fős csapatot ($\\binom{12}{3}$), majd vond ki belőle a csak fiúkból állókat ($\\binom{5}{3}$)!';
+          }
+        }
+      ],
+      4: [
+        {
+          tag: '4. Szint (Mesterfok): Hipergeometrikus valószínűség',
+          mode: 'hyper',
+          text: 'Egy csomagban 25 csavar található, amelyek közül 4 gyári hibás. Minőségellenőrzés céljából visszatevés nélkül, véletlenszerűen kiveszünk 3 csavart. Mennyi a valószínűsége annak, hogy pontosan 1 hibás csavar lesz a mintában?',
+          num: 840,
+          den: 2300,
+          compNum: null,
+          formula: '$P = \\frac{k}{\\text{ö}} = \\frac{\\binom{K}{k} \\cdot \\binom{N-K}{n-k}}{\\binom{N}{n}}$',
+          hintNum: '4 hibásból 1-et ÉS a maradék 21 jóból 2-t választunk: $\\binom{4}{1} \\cdot \\binom{21}{2}$.',
+          hintDen: '25 csavarból összesen $\\binom{25}{3}$-féleképpen választhatunk 3-at.'
+        },
+        {
+          tag: '4. Szint (Mesterfok): Hipergeometrikus valószínűség',
+          mode: 'hyper',
+          text: 'Egy könyvesboltba érkezett 18 könyv közül 3 nyomdahibás. Ha véletlenszerűen, visszatevés nélkül kiválasztunk 4 könyvet, mennyi a valószínűsége annak, hogy egyik sem lesz nyomdahibás?',
+          num: 1365,
+          den: 3060,
+          compNum: null,
+          formula: '$P = \\frac{\\binom{K}{0} \\cdot \\binom{N-K}{n}}{\\binom{N}{n}}$',
+          hintNum: '3 hibásból 0-t, a maradék 15 jóból 4-et húzunk: $\\binom{3}{0} \\cdot \\binom{15}{4}$.',
+          hintDen: '18 könyvből 4-et $\\binom{18}{4}$-féleképpen választhatunk.'
+        },
+        {
+          tag: '4. Szint (Mesterfok): Lottó valószínűség',
+          mode: 'hyper',
+          text: 'A hatoslottón $1$-től $45$-ig terjedő számok közül húznak ki hatot visszatevés nélkül. Mennyi a valószínűsége annak, hogy egyetlen, véletlenszerűen kitöltött szelvénnyel pontosan hármas találatot érünk el?',
+          num: 182780,
+          den: 8145060,
+          compNum: null,
+          formula: '$P = \\frac{\\binom{K}{k} \\cdot \\binom{N-K}{n-k}}{\\binom{N}{n}}$',
+          hintNum: 'A 6 nyerőszámból 3-at eltalálunk ($\\binom{6}{3}$), a maradék 39 nem nyerőből pedig 3-at ($\\binom{39}{3}$). Szorozd össze őket!',
+          hintDen: '45 számból 6-ot $\\binom{45}{6}$-féleképpen húzhatnak ki.'
+        },
+        {
+          tag: '4. Szint (Mesterfok): Komplementer hipergeometrikus',
+          mode: 'hyper',
+          text: 'Egy dobozban 15 alkatrész van, közülük 3 hibás. Visszatevés nélkül kiveszünk 3 alkatrészt. Mennyi a valószínűsége annak, hogy legalább 1 hibás lesz a mintában? (Tipp: a számlálóhoz használd a komplementer módszert: összes eset mínusz a 0 hibás esetek!)',
+          num: 235,
+          den: 455,
+          compNum: 220,
+          formula: 'Komplementer út: $k = \\text{ö} - k_{\\text{0 hibás}} = \\binom{N}{n} - \\binom{N-K}{n}$',
+          hintNum: 'Összes eset ($\\binom{15}{3}$) mínusz a 0 hibás esetek ($\\binom{12}{3}$).',
+          hintDen: '15 alkatrészből 3-at $\\binom{15}{3}$-féleképpen választhatunk ki.'
+        }
+      ]
+    };
+
+    // DINAMIKUS GENERÁTOROK (hogy ismétléskor / szabad módban se fogyjon ki)
+    function generateDynamicTask(level) {
+      if (level === 1) {
+        const type = randInt(0, 2);
+        if (type === 0) {
+          const n = randInt(7, 18);
+          const ans = comb(n, 2);
+          return {
+            tag: '1. Szint: Alap kombináció',
+            mode: 'simple',
+            text: `Egy ${n} fős baráti társaságban mindenki pontosan egyszer koccint mindenkivel. Hány koccintás történik összesen?`,
+            answer: ans,
+            formula: '$\\binom{n}{2} = \\frac{n(n-1)}{2}$',
+            diagnose: (u) => u === n * (n - 1)
+              ? `A $${n} \\cdot ${n-1}$ a sorrendet is számolja! Mivel A–B és B–A ugyanaz a koccintás, oszd el $2$-vel!`
+              : `Számold ki a $\\binom{${n}}{2} = \\frac{${n} \\cdot ${n-1}}{2}$ értéket!`
+          };
+        } else if (type === 1) {
+          const n = randInt(8, 16);
+          const ans = comb(n, 2) - n;
+          return {
+            tag: '1. Szint: Geometriai kombinatorika',
+            mode: 'simple',
+            text: `Hány átlója van egy konvex ${n}-szögnek?`,
+            answer: ans,
+            formula: 'Átlók száma: $\\binom{n}{2} - n$',
+            diagnose: (u) => u === comb(n, 2)
+              ? `A $\\binom{${n}}{2}$ tartalmazza a sokszög ${n} oldalát is! Vond ki belőle a ${n}-et!`
+              : `Számold ki az összes csúcspárt ($\\binom{${n}}{2}$), és vond ki belőle az oldalak számát ($${n}$)!`
+          };
+        } else {
+          const n = randInt(12, 22);
+          const ans = comb(n, 3);
+          return {
+            tag: '1. Szint: Alap kombináció',
+            mode: 'simple',
+            text: `Egy ${n} fős diákcsoportból 3 egyenrangú tagból álló küldöttséget választanak. Hányféleképpen tehetik ezt meg?`,
+            answer: ans,
+            formula: '$\\binom{n}{3} = \\frac{n(n-1)(n-2)}{6}$',
+            diagnose: (u) => u === ans * 6
+              ? `Elfelejtetted elosztani $3! = 6$-tal, pedig a küldöttségben nincsenek tisztségek!`
+              : `Számold ki a $\\binom{${n}}{3}$ kombináció értékét!`
+          };
+        }
+      }
+
+      if (level === 2) {
+        const A = randInt(6, 10);
+        const B = randInt(5, 8);
+        const a = randInt(2, 3);
+        const b = randInt(1, 2);
+        const ans = comb(A, a) * comb(B, b);
+        return {
+          tag: '2. Szint: Urnamodell / Halmazbontás',
+          mode: 'simple',
+          text: `Egy dobozban ${A} kék és ${B} sárga golyó van. Visszatevés nélkül kihúzunk ${a + b} golyót. Hányféleképpen húzhatunk ki pontosan ${a} kék és ${b} sárga golyót?`,
+          answer: ans,
+          formula: 'Kedvező esetek: $\\binom{A}{a} \\cdot \\binom{B}{b}$',
+          diagnose: (u) => u === comb(A, a) + comb(B, b)
+            ? `Összeadtad a két kombinációt szorzás helyett! A független választásokat szorozni kell.`
+            : `Számold ki külön: $\\binom{${A}}{${a}}$ és $\\binom{${B}}{${b}}$, majd szorozd össze őket!`
+        };
+      }
+
+      if (level === 3) {
+        const type = randInt(0, 1);
+        if (type === 0) {
+          const A = randInt(7, 11);
+          const B = randInt(5, 8);
+          const c1 = comb(A, 3) * comb(B, 1);
+          const c2 = comb(A, 4);
+          return {
+            tag: '3. Szint: Esetszétválasztás ("legalább")',
+            mode: 'simple',
+            text: `Egy ${A + B} fős szakkörben ${A} lány és ${B} fiú van. Egy 4 fős csapatot választanak úgy, hogy legalább 3 lány legyen benne. Hányféleképpen tehetik ezt meg?`,
+            answer: c1 + c2,
+            formula: 'Diszjunkt esetek összege: $\\binom{A}{3}\\binom{B}{1} + \\binom{A}{4}\\binom{B}{0}$',
+            diagnose: (u) => u === c1
+              ? `Csak a 3 lány + 1 fiú esetet számoltad ki! Add hozzá a 4 lány + 0 fiú esetet ($\\binom{${A}}{4}$) is!`
+              : `Két eset van: (3 lány, 1 fiú) VAGY (4 lány, 0 fiú). Számold ki mindkettőt, majd add össze!`
+          };
+        } else {
+          const A = randInt(6, 9);
+          const B = randInt(4, 7);
+          const tot = comb(A + B, 3);
+          const comp = comb(B, 3);
+          return {
+            tag: '3. Szint: Komplementer kiválasztás',
+            mode: 'simple',
+            text: `Egy ${A + B} fős csapatban ${A} rutinos és ${B} kezdő játékos van. 3 fős delegációt választanak. Hányféleképpen állítható össze, ha legalább 1 rutinos játékosnak benne kell lennie?`,
+            answer: tot - comp,
+            formula: 'Komplementer út: $\\binom{N}{3} - \\binom{\\text{kezdő}}{3}$',
+            diagnose: (u) => u === comp
+              ? `A $\\binom{${B}}{3}$ a komplementer (csak kezdők) eset! Vond ki az összes esetből ($\\binom{${A+B}}{3}$)!`
+              : `Vond ki az összes 3 fős csapatból ($\\binom{${A+B}}{3}$) a csak kezdőkből állókat ($\\binom{${B}}{3}$)!`
+          };
+        }
+      }
+
+      // Level 4: Hypergeometric probability (direct or complementary)
+      const isComp = Math.random() < 0.45;
+      const N = randInt(14, 22);
+      const K = randInt(3, 5);
+      const n = randInt(3, 4);
+      const den = comb(N, n);
+      if (isComp) {
+        const compNum = comb(N - K, n);
+        const num = den - compNum;
+        return {
+          tag: '4. Szint (Mesterfok): Komplementer hipergeometrikus',
+          mode: 'hyper',
+          text: `Egy polcon ${N} termék közül ${K} hibás. Visszatevés nélkül véletlenszerűen leveszünk ${n} terméket. Mennyi a valószínűsége annak, hogy legalább 1 hibás lesz közöttük?`,
+          num,
+          den,
+          compNum,
+          formula: 'Komplementer: $k = \\binom{N}{n} - \\binom{N-K}{n}$, $P = \\frac{k}{\\text{ö}}$',
+          hintNum: `Komplementer úton a leggyorsabb: összes eset ($\\binom{${N}}{${n}}$) mínusz a 0 hibás esetek ($\\binom{${N-K}}{${n}}$).`,
+          hintDen: `Összesen $\\binom{${N}}{${n}}$-féleképpen választhatunk ${n} terméket.`
+        };
+      } else {
+        const k = randInt(1, 2);
+        const num = comb(K, k) * comb(N - K, n - k);
+        return {
+          tag: '4. Szint (Mesterfok): Hipergeometrikus valószínűség',
+          mode: 'hyper',
+          text: `Egy dobozban ${N} alkatrész található, amelyek közül ${K} selejtes. Visszatevés nélkül kiválasztunk ${n} darabot. Mennyi a valószínűsége, hogy pontosan ${k} selejtes lesz a mintában?`,
+          num,
+          den,
+          compNum: null,
+          formula: '$P = \\frac{\\binom{K}{k} \\cdot \\binom{N-K}{n-k}}{\\binom{N}{n}}$',
+          hintNum: `${K} selejtesből ${k}-t és a maradék ${N-K} jóból ${n-k}-t húzunk: $\\binom{${K}}{${k}} \\cdot \\binom{${N-K}}{${n-k}}$.`,
+          hintDen: `${N} alkatrészből ${n}-et $\\binom{${N}}{${n}}$-féleképpen választhatunk.`
+        };
+      }
+    }
+
+    // =========================================================
+    // JÁTÉKÁLLAPOT & ADAPTÍV MOTOR
+    // =========================================================
+    const state = {
+      level: 1,
+      streak: 0,
+      wrongStreak: 0,
+      masterSolved: 0,
+      totalAttempts: 0,
+      totalCorrect: 0,
+      solvedCount: 0,
+      freeMode: false,
+      codeGenerated: false,
+      currentTask: null,
+      taskAnswered: false,
+      activeInput: null,
+      queues: { 1: [], 2: [], 3: [], 4: [] }
+    };
+
+    function initQueues() {
+      for (let lv = 1; lv <= 4; lv++) {
+        state.queues[lv] = [...CORE_TASKS[lv]];
+      }
+    }
+
+    function pickTask(level) {
+      if (state.queues[level].length > 0) {
+        return state.queues[level].shift();
+      }
+      return generateDynamicTask(level);
+    }
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function renderMath(el) {
+      if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+        MathJax.typesetPromise(el ? [el] : undefined).catch(err => console.log(err.message));
+      }
+    }
+
+    // =========================================================
+    // BEVEZETŐ PRÓBA KÉPERNYŐ
+    // =========================================================
+    const sbInt = document.getElementById('sb-int');
+    const sbProb = document.getElementById('sb-prob');
+
+    sbInt.addEventListener('input', () => {
+      const v = parseIntInput(sbInt.value);
+      const st = document.getElementById('sb-int-status');
+      if (v === 15) {
+        st.textContent = '✅ Szuper! Tökéletesen beolvasta: 15';
+        st.className = 'sandbox-status ok';
+      } else if (v !== null) {
+        st.textContent = `Beolvasva: ${fmtInt(v)} (próbáld a 15-öt!)`;
+        st.className = 'sandbox-status wait';
+      } else {
+        st.textContent = 'Próbáld ki: írd be a 15-öt!';
+        st.className = 'sandbox-status wait';
+      }
+    });
+
+    sbProb.addEventListener('input', () => {
+      const p = parseProbInput(sbProb.value);
+      const st = document.getElementById('sb-prob-status');
+      if (p && Math.abs(p.value - 0.25) < 0.001) {
+        st.textContent = `✅ Szuper! Beolvasva: ${(p.value * 100).toFixed(1).replace('.', ',')}%`;
+        st.className = 'sandbox-status ok';
+      } else if (p) {
+        st.textContent = `Beolvasva: ${p.value.toFixed(4).replace('.', ',')} (próbáld: 1/4 vagy 0,25 vagy 25%)`;
+        st.className = 'sandbox-status wait';
+      } else {
+        st.textContent = 'Próbáld ki: írj be 1/4-et, 0,25-öt vagy 25%-ot!';
+        st.className = 'sandbox-status wait';
+      }
+    });
+
+    function startGame() {
+      initQueues();
+      state.level = 1;
+      state.streak = 0;
+      state.wrongStreak = 0;
+      state.masterSolved = 0;
+      state.totalAttempts = 0;
+      state.totalCorrect = 0;
+      state.solvedCount = 0;
+      state.freeMode = false;
+      showScreen('screen-game');
+      loadNextTask();
+    }
+
+    // =========================================================
+    // FADING & HALADÁSI CSÍK
+    // =========================================================
+    function updateHeaderAndFading() {
+      const levelNames = {
+        1: '1. Alap kombinációk',
+        2: '2. Halmazbontás & Urna',
+        3: '3. Esetszétválasztás',
+        4: '4. Mesterfok (Hipergeometrikus)'
+      };
+      document.getElementById('level-label').textContent = levelNames[state.level];
+      const badge = document.getElementById('level-badge');
+      badge.textContent = `Szint ${state.level} / 4`;
+      badge.classList.toggle('master', state.level === 4);
+      document.getElementById('streak-val').textContent = state.streak;
+
+      const mc = document.getElementById('master-counter');
+      if (state.level === 4 && !state.freeMode) {
+        mc.style.display = 'inline';
+        document.getElementById('master-val').textContent = state.masterSolved;
+      } else {
+        mc.style.display = 'none';
+      }
+
+      for (let i = 1; i <= 4; i++) {
+        const fill = document.getElementById(`seg-${i}`);
+        if (i < state.level) {
+          fill.style.width = '100%';
+        } else if (i === state.level) {
+          const pct = state.level === 4
+            ? Math.min(100, (state.masterSolved / 3) * 100)
+            : Math.min(100, (state.streak / 3) * 100);
+          fill.style.width = `${pct}%`;
+        } else {
+          fill.style.width = '0%';
+        }
+      }
+
+      const gridAlpha = Math.max(0.08, 0.7 - state.streak * 0.14);
+      document.documentElement.style.setProperty('--grid-alpha', gridAlpha.toFixed(2));
+
+      const fBar = document.getElementById('formula-bar');
+      const fOpacity = Math.max(0.08, 1 - state.streak * 0.25);
+      fBar.style.opacity = fOpacity.toFixed(2);
+    }
+
+    // =========================================================
+    // FELADAT BETÖLTÉS ÉS ÉLŐ ELŐNÉZET
+    // =========================================================
+    function loadNextTask() {
+      const task = pickTask(state.level);
+      state.currentTask = task;
+      state.taskAnswered = false;
+
+      document.getElementById('task-type-tag').textContent = task.tag;
+      document.getElementById('formula-bar').innerHTML = task.formula;
+      document.getElementById('task-text').innerHTML = task.text;
+
+      const fb = document.getElementById('feedback-box');
+      fb.className = 'feedback-box';
+      fb.innerHTML = '';
+
+      document.getElementById('btn-check').style.display = 'inline-flex';
+      document.getElementById('btn-next').style.display = 'none';
+
+      const simpleArea = document.getElementById('simple-input-area');
+      const hyperArea = document.getElementById('hyper-input-area');
+
+      if (task.mode === 'simple') {
+        simpleArea.style.display = 'flex';
+        hyperArea.style.display = 'none';
+        const inp = document.getElementById('inp-simple');
+        inp.value = '';
+        inp.className = 'math-input';
+        inp.disabled = false;
+        document.getElementById('prev-simple').textContent = '';
+        state.activeInput = inp;
+        setTimeout(() => inp.focus(), 50);
+      } else {
+        simpleArea.style.display = 'none';
+        hyperArea.style.display = 'grid';
+        ['inp-num', 'inp-den', 'inp-prob'].forEach(id => {
+          const el = document.getElementById(id);
+          el.value = '';
+          el.className = 'math-input';
+          el.disabled = false;
+        });
+        document.getElementById('prev-num').textContent = '';
+        document.getElementById('prev-den').textContent = '';
+        document.getElementById('prev-prob').textContent = '';
+        const first = document.getElementById('inp-num');
+        state.activeInput = first;
+        setTimeout(() => first.focus(), 50);
+      }
+
+      updateHeaderAndFading();
+      renderMath(document.getElementById('screen-game'));
+    }
+
+    function bindLivePreviews() {
+      document.getElementById('inp-simple').addEventListener('input', (e) => {
+        const v = parseIntInput(e.target.value);
+        document.getElementById('prev-simple').textContent = v !== null ? `Beolvasva: ${fmtInt(v)}` : '';
+      });
+      document.getElementById('inp-num').addEventListener('input', (e) => {
+        const v = parseIntInput(e.target.value);
+        document.getElementById('prev-num').textContent = v !== null ? `k = ${fmtInt(v)}` : '';
+      });
+      document.getElementById('inp-den').addEventListener('input', (e) => {
+        const v = parseIntInput(e.target.value);
+        document.getElementById('prev-den').textContent = v !== null ? `ö = ${fmtInt(v)}` : '';
+      });
+      document.getElementById('inp-prob').addEventListener('input', (e) => {
+        const p = parseProbInput(e.target.value);
+        if (p) {
+          document.getElementById('prev-prob').textContent =
+            `Beolvasva: ≈ ${p.value.toFixed(4).replace('.', ',')} (${(p.value * 100).toFixed(2).replace('.', ',')}%)`;
+        } else {
+          document.getElementById('prev-prob').textContent = '';
+        }
+      });
+
+      document.querySelectorAll('.math-input').forEach(inp => {
+        inp.addEventListener('focus', () => { state.activeInput = inp; });
+      });
+    }
+    bindLivePreviews();
+
+    function insertKey(ch) {
+      const inp = state.activeInput || document.activeElement;
+      if (!inp || inp.tagName !== 'INPUT' || inp.disabled) return;
+      const start = inp.selectionStart ?? inp.value.length;
+      const end = inp.selectionEnd ?? inp.value.length;
+      inp.value = inp.value.slice(0, start) + ch + inp.value.slice(end);
+      inp.setSelectionRange(start + ch.length, start + ch.length);
+      inp.focus();
+      inp.dispatchEvent(new Event('input'));
+    }
+
+    function backspaceKey() {
+      const inp = state.activeInput || document.activeElement;
+      if (!inp || inp.tagName !== 'INPUT' || inp.disabled) return;
+      const start = inp.selectionStart ?? inp.value.length;
+      const end = inp.selectionEnd ?? inp.value.length;
+      if (start !== end) {
+        inp.value = inp.value.slice(0, start) + inp.value.slice(end);
+        inp.setSelectionRange(start, start);
+      } else if (start > 0) {
+        inp.value = inp.value.slice(0, start - 1) + inp.value.slice(start);
+        inp.setSelectionRange(start - 1, start - 1);
+      }
+      inp.focus();
+      inp.dispatchEvent(new Event('input'));
+    }
+
+    // =========================================================
+    // ELLENŐRZÉS & GROKKING HIBAELEMZÉS
+    // =========================================================
+    function checkAnswer() {
+      if (state.taskAnswered) return;
+      const task = state.currentTask;
+      const fb = document.getElementById('feedback-box');
+
+      if (task.mode === 'simple') {
+        const inp = document.getElementById('inp-simple');
+        const val = parseIntInput(inp.value);
+        if (val === null) {
+          fb.className = 'feedback-box error';
+          fb.innerHTML = 'Kérlek, írj be egy érvényes egész számot a mezőbe!';
+          inp.focus();
+          return;
+        }
+        state.totalAttempts++;
+        if (val === task.answer) {
+          inp.className = 'math-input input-ok';
+          inp.disabled = true;
+          handleCorrect(`✅ Hibátlan! A helyes válasz valóban <strong>${fmtInt(task.answer)}</strong>.`);
+        } else {
+          inp.className = 'math-input input-err';
+          handleWrong(task.diagnose(val));
+          inp.focus();
+          inp.select();
+        }
+      } else {
+        const iNum = document.getElementById('inp-num');
+        const iDen = document.getElementById('inp-den');
+        const iProb = document.getElementById('inp-prob');
+
+        const uNum = parseIntInput(iNum.value);
+        const uDen = parseIntInput(iDen.value);
+        const uProb = parseProbInput(iProb.value);
+
+        if (uNum === null || uDen === null || uProb === null) {
+          fb.className = 'feedback-box error';
+          fb.innerHTML = 'Kérlek, töltsd ki mindhárom mezőt (számláló, nevező, valószínűség)!';
+          if (uNum === null) iNum.focus();
+          else if (uDen === null) iDen.focus();
+          else iProb.focus();
+          return;
+        }
+
+        state.totalAttempts++;
+        const exactProb = task.num / task.den;
+        const g = gcd(task.num, task.den);
+        const simpNum = task.num / g;
+        const simpDen = task.den / g;
+
+        const numOk = (uNum === task.num) || (uNum === simpNum && uDen === simpDen);
+        const denOk = (uDen === task.den) || (uNum === simpNum && uDen === simpDen);
+        const tol = exactProb < 0.05 ? 0.001 : 0.003;
+        const probOk = Math.abs(uProb.value - exactProb) <= tol;
+
+        iNum.className = 'math-input ' + (numOk ? 'input-ok' : 'input-err');
+        iDen.className = 'math-input ' + (denOk ? 'input-ok' : 'input-err');
+        iProb.className = 'math-input ' + (probOk ? 'input-ok' : 'input-err');
+
+        if (numOk && denOk && probOk) {
+          iNum.disabled = iDen.disabled = iProb.disabled = true;
+          const pctStr = (exactProb * 100).toFixed(2).replace('.', ',');
+          handleCorrect(
+            `✅ Mesteri megoldás! $P = \\frac{${fmtInt(task.num)}}{${fmtInt(task.den)}} \\approx ${exactProb.toFixed(4).replace('.', ',')} \\; (${pctStr}\\%)$.`
+          );
+        } else {
+          let msgs = [];
+          if (!numOk) {
+            if (task.compNum !== null && uNum === task.compNum) {
+              msgs.push(`<strong>Komplementer csapda!</strong> A számlálóba az ellenkező (0 hibás) esemény esetszámát írtad be! A kedvező esetek száma: $\\text{ö} - k_{\\text{0 hibás}}$.`);
+            } else {
+              msgs.push(`<strong>Számláló (k):</strong> ${task.hintNum}`);
+            }
+          }
+          if (!denOk) {
+            msgs.push(`<strong>Nevező (ö):</strong> ${task.hintDen}`);
+          }
+          if (numOk && denOk && !probOk) {
+            msgs.push(`<strong>Valószínűség ($P$):</strong> A számlálód és a neveződ is jó, csak az osztásnál csúszott be hiba! Írhatod közvetlenül törtként is (<code>k/ö</code>).`);
+          }
+          handleWrong(msgs.join('<br>'));
+          if (!numOk) iNum.focus();
+          else if (!denOk) iDen.focus();
+          else iProb.focus();
+        }
+      }
+    }
+
+    function handleCorrect(msgHtml) {
+      state.taskAnswered = true;
+      state.totalCorrect++;
+      state.solvedCount++;
+      state.streak++;
+      state.wrongStreak = 0;
+
+      let extra = '';
+      if (!state.freeMode) {
+        if (state.level < 4 && state.streak >= 3) {
+          state.level++;
+          state.streak = 0;
+          extra = `<br>🚀 <strong>Szintlépés!</strong> Elérted a ${state.level}. szintet!`;
+        } else if (state.level === 4) {
+          state.masterSolved++;
+          if (state.masterSolved >= 3) {
+            extra = `<br>🏆 <strong>Mesterfok teljesítve!</strong> Kattints tovább az igazolókódodért!`;
+          } else {
+            extra = `<br>🏆 Mesterfok haladás: <strong>${state.masterSolved} / 3</strong>`;
+          }
+        }
+      }
+
+      const fb = document.getElementById('feedback-box');
+      fb.className = 'feedback-box success';
+      fb.innerHTML = msgHtml + extra;
+      renderMath(fb);
+
+      document.getElementById('btn-check').style.display = 'none';
+      const btnNext = document.getElementById('btn-next');
+      btnNext.style.display = 'inline-flex';
+      btnNext.textContent = (!state.freeMode && state.level === 4 && state.masterSolved >= 3)
+        ? '🏆 Igazolókód átvétele →'
+        : 'Következő feladat (Enter) →';
+
+      updateHeaderAndFading();
+    }
+
+    function handleWrong(msgHtml) {
+      state.streak = 0;
+      state.wrongStreak++;
+
+      let extra = '';
+      if (!state.freeMode && state.wrongStreak >= 2 && state.level > 1) {
+        state.level--;
+        state.wrongStreak = 0;
+        extra = `<br>↩️ <em>Visszalépünk a ${state.level}. szintre egy kis megerősítésre a következő feladattól.</em>`;
+      }
+
+      const fb = document.getElementById('feedback-box');
+      fb.className = 'feedback-box error';
+      fb.innerHTML = msgHtml + extra;
+      renderMath(fb);
+      updateHeaderAndFading();
+    }
+
+    function nextTask() {
+      if (!state.freeMode && state.level === 4 && state.masterSolved >= 3) {
+        openVictoryScreen();
+        return;
+      }
+      loadNextTask();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+        e.preventDefault();
+        openDecoder();
+        return;
+      }
+      if (document.getElementById('decoder-modal').classList.contains('open')) return;
+
+      if (e.key === 'Enter') {
+        if (document.getElementById('screen-intro').classList.contains('active')) {
+          startGame();
+          return;
+        }
+        if (document.getElementById('screen-game').classList.contains('active')) {
+          e.preventDefault();
+          if (state.taskAnswered) {
+            nextTask();
+            return;
+          }
+          if (state.currentTask && state.currentTask.mode === 'hyper') {
+            const act = document.activeElement;
+            if (act && act.id === 'inp-num') { document.getElementById('inp-den').focus(); return; }
+            if (act && act.id === 'inp-den') { document.getElementById('inp-prob').focus(); return; }
+          }
+          checkAnswer();
+        }
+      }
+    });
+
+    // =========================================================
+    // GYŐZELMI KÉPERNYŐ & TITKOSÍTOTT BASE32 IGAZOLÓKÓD
+    // =========================================================
+    function openVictoryScreen() {
+      const acc = state.totalAttempts > 0
+        ? Math.round((state.totalCorrect / state.totalAttempts) * 100)
+        : 100;
+      document.getElementById('v-solved').textContent = state.solvedCount;
+      document.getElementById('v-accuracy').textContent = `${acc}%`;
+      showScreen('screen-victory');
+      setTimeout(() => document.getElementById('student-name').focus(), 100);
+    }
+
+    function enterFreeMode() {
+      state.freeMode = true;
+      document.getElementById('free-mode-badge').style.display = 'inline';
+      showScreen('screen-game');
+      loadNextTask();
+    }
+
+    const SECRET_SEED = 0x5A7C9E31;
+    const B32_ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+    function crc16(bytes) {
+      let crc = 0xFFFF;
+      for (let i = 0; i < bytes.length; i++) {
+        crc ^= (bytes[i] << 8);
+        for (let j = 0; j < 8; j++) {
+          crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
+        }
+      }
+      return crc;
+    }
+
+    function keystreamByte(seedObj) {
+      let x = seedObj.v >>> 0;
+      x ^= x << 13;
+      x ^= x >>> 17;
+      x ^= x << 5;
+      seedObj.v = x >>> 0;
+      return seedObj.v & 0xFF;
+    }
+
+    function base32Encode(bytes) {
+      let bits = 0, value = 0, out = '';
+      for (let i = 0; i < bytes.length; i++) {
+        value = (value << 8) | bytes[i];
+        bits += 8;
+        while (bits >= 5) {
+          out += B32_ALPHA[(value >>> (bits - 5)) & 31];
+          bits -= 5;
+        }
+      }
+      if (bits > 0) {
+        out += B32_ALPHA[(value << (5 - bits)) & 31];
+      }
+      return out.match(/.{1,4}/g).join('-');
+    }
+
+    function base32Decode(str) {
+      const clean = str.toUpperCase().replace(/[^A-Z2-7]/g, '');
+      if (!clean.length) return null;
+      let bits = 0, value = 0;
+      const out = [];
+      for (let i = 0; i < clean.length; i++) {
+        const idx = B32_ALPHA.indexOf(clean[i]);
+        if (idx === -1) return null;
+        value = (value << 5) | idx;
+        bits += 5;
+        if (bits >= 8) {
+          out.push((value >>> (bits - 8)) & 0xFF);
+          bits -= 8;
+        }
+      }
+      return new Uint8Array(out);
+    }
+
+    function encodeCert(name, dateStr, acc, solved) {
+      const payloadStr = `${name}|${dateStr}|${acc}|${solved}`;
+      const payload = new TextEncoder().encode(payloadStr);
+      const cs = crc16(payload);
+
+      const plain = new Uint8Array(payload.length + 2);
+      plain.set(payload, 0);
+      plain[payload.length] = (cs >>> 8) & 0xFF;
+      plain[payload.length + 1] = cs & 0xFF;
+
+      const s0 = Math.floor(Math.random() * 256);
+      const s1 = Math.floor(Math.random() * 256);
+      const seedObj = { v: (SECRET_SEED ^ ((s0 << 8) | s1) ^ 0x9E3779B9) >>> 0 };
+      if (seedObj.v === 0) seedObj.v = 0x12345678;
+
+      const finalBytes = new Uint8Array(2 + plain.length);
+      finalBytes[0] = s0;
+      finalBytes[1] = s1;
+      for (let i = 0; i < plain.length; i++) {
+        finalBytes[2 + i] = plain[i] ^ keystreamByte(seedObj);
+      }
+      return base32Encode(finalBytes);
+    }
+
+    function decodeCert(codeStr) {
+      try {
+        const raw = base32Decode(codeStr);
+        if (!raw || raw.length < 7) return null;
+        const s0 = raw[0], s1 = raw[1];
+        const seedObj = { v: (SECRET_SEED ^ ((s0 << 8) | s1) ^ 0x9E3779B9) >>> 0 };
+        if (seedObj.v === 0) seedObj.v = 0x12345678;
+
+        const plain = new Uint8Array(raw.length - 2);
+        for (let i = 0; i < plain.length; i++) {
+          plain[i] = raw[2 + i] ^ keystreamByte(seedObj);
+        }
+        const payload = plain.slice(0, plain.length - 2);
+        const csExpected = (plain[plain.length - 2] << 8) | plain[plain.length - 1];
+        if (crc16(payload) !== csExpected) return null;
+
+        const text = new TextDecoder().decode(payload);
+        const parts = text.split('|');
+        if (parts.length !== 4) return null;
+        return { name: parts[0], date: parts[1], accuracy: parts[2], solved: parts[3] };
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function generateClassroomCode() {
+      if (state.codeGenerated) return;
+      const nameEl = document.getElementById('student-name');
+      const name = nameEl.value.trim().replace(/\|/g, '');
+      if (name.length < 3) {
+        alert('Kérlek, írd be a teljes nevedet (legalább 3 karakter)!');
+        nameEl.focus();
+        return;
+      }
+
+      const now = new Date();
+      const yy = String(now.getFullYear()).slice(-2);
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const dateStr = `${yy}.${mm}.${dd}`;
+      const acc = state.totalAttempts > 0
+        ? Math.round((state.totalCorrect / state.totalAttempts) * 100)
+        : 100;
+
+      const code = encodeCert(name, dateStr, acc, state.solvedCount);
+
+      state.codeGenerated = true;
+      nameEl.disabled = true;
+      const genBtn = document.getElementById('btn-gen-code');
+      genBtn.disabled = true;
+      genBtn.textContent = '🔒 Kód legenerálva';
+
+      const disp = document.getElementById('code-display');
+      disp.textContent = code;
+      disp.style.display = 'block';
+      document.getElementById('btn-copy-code').style.display = 'inline-flex';
+    }
+
+    function copyCode() {
+      const code = document.getElementById('code-display').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('btn-copy-code');
+        btn.textContent = '✅ Kimásolva!';
+        setTimeout(() => btn.textContent = '📋 Kód másolása', 1800);
+      });
+    }
+
+    // =========================================================
+    // REJTETT TANÁRI DEKÓDOLÓ (5 KATTINTÁS VAGY CTRL+SHIFT+D)
+    // =========================================================
+    let clickCount = 0;
+    let clickTimer = null;
+    document.getElementById('teacher-trigger').addEventListener('click', () => {
+      clickCount++;
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => { clickCount = 0; }, 1800);
+      if (clickCount >= 5) {
+        clickCount = 0;
+        openDecoder();
+      }
+    });
+
+    function openDecoder() {
+      document.getElementById('decoder-modal').classList.add('open');
+      setTimeout(() => document.getElementById('decoder-input').focus(), 80);
+    }
+
+    function closeDecoder() {
+      document.getElementById('decoder-modal').classList.remove('open');
+    }
+
+    function runBatchDecode() {
+      const lines = document.getElementById('decoder-input').value
+        .split(/\r?\n/)
+        .map(l => l.trim())
+        .filter(l => l.length > 0);
+
+      if (!lines.length) {
+        document.getElementById('decoder-results').innerHTML = '<p style="color:#b91c1c;">Nincs beillesztett kód.</p>';
+        return;
+      }
+
+      let html = '<table class="decode-table"><thead><tr><th>Státusz</th><th>Név</th><th>Dátum</th><th>Pontosság</th><th>Megoldott</th></tr></thead><tbody>';
+      lines.forEach(line => {
+        const res = decodeCert(line);
+        if (res) {
+          html += `<tr>
+            <td style="color:#15803d; font-weight:700;">✅ HITELES</td>
+            <td><strong>${res.name}</strong></td>
+            <td>20${res.date}</td>
+            <td>${res.accuracy}%</td>
+            <td>${res.solved} db</td>
+          </tr>`;
+        } else {
+          html += `<tr>
+            <td style="color:#b91c1c; font-weight:700;">❌ HAMIS</td>
+            <td colspan="4" style="font-family:monospace; color:#64748b;">${line.slice(0, 32)}...</td>
+          </tr>`;
+        }
+      });
+      html += '</tbody></table>';
+      document.getElementById('decoder-results').innerHTML = html;
+    }
+
+    window.onload = () => {
+      renderMath();
+    };
+  </script>
+</body>
+</html>
